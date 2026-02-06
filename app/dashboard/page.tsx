@@ -13,9 +13,12 @@ import AdvisorAI from "../components/AdvisorAI";
 import AdvisorChat from "../components/AdvisorChat";
 import HistoryList from "../components/HistoryList";
 
-// ✅ IMPORTANT : chart chargé côté CLIENT UNIQUEMENT
+// ✅ FIX VERCEL — dynamic import correct
 const HistoryChart = dynamic(
-  () => import("../components/HistoryChart"),
+  () =>
+    import("../components/HistoryChart").then(
+      (mod) => mod.default
+    ),
   { ssr: false }
 );
 
@@ -30,13 +33,15 @@ export default function DashboardPage() {
   // 🌙 Thème
   const { theme, toggleTheme } = useTheme();
 
-  // 💰 États principaux
+  // 💰 États
   const [salary, setSalary] = useState<number>(8000);
   const [charges, setCharges] = useState<number>(4500);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   // 📦 Charger depuis localStorage
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const savedSalary = localStorage.getItem("salary");
     const savedCharges = localStorage.getItem("charges");
     const savedHistory = localStorage.getItem("history");
@@ -48,17 +53,21 @@ export default function DashboardPage() {
 
   // 💾 Sauvegarde auto
   useEffect(() => {
-    localStorage.setItem("salary", salary.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("salary", salary.toString());
+    }
   }, [salary]);
 
   useEffect(() => {
-    localStorage.setItem("charges", charges.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("charges", charges.toString());
+    }
   }, [charges]);
 
   // 🧮 Calcul
   const balance = salary - charges;
 
-  // 🚨 Alertes intelligentes
+  // 🚨 Alertes
   let alertMessage = "";
   let alertColor = "";
 
@@ -87,7 +96,7 @@ export default function DashboardPage() {
 
         <button
           onClick={toggleTheme}
-          className="self-start md:self-auto px-4 py-2 rounded bg-gray-800 text-white dark:bg-gray-200 dark:text-black"
+          className="px-4 py-2 rounded bg-gray-800 text-white dark:bg-gray-200 dark:text-black"
         >
           {theme === "light" ? "🌙 Dark mode" : "☀️ Light mode"}
         </button>
@@ -101,11 +110,7 @@ export default function DashboardPage() {
       {/* 📊 Cartes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <InfoCard title="Salaire mensuel" amount={`${salary} DH`} />
-        <InfoCard
-          title="Charges fixes"
-          amount={`${charges} DH`}
-          color="text-red-600"
-        />
+        <InfoCard title="Charges fixes" amount={`${charges} DH`} color="text-red-600" />
         <InfoCard
           title="Solde disponible"
           amount={`${balance} DH`}
@@ -123,27 +128,13 @@ export default function DashboardPage() {
       <InvestmentForm balance={balance} />
 
       {/* 📈 Graphique actuel */}
-      <FinanceChart
-        salary={salary}
-        charges={charges}
-        balance={balance}
-      />
+      <FinanceChart salary={salary} charges={charges} balance={balance} />
 
-      {/* 🤖 IA conseils */}
-      <AdvisorAI
-        salary={salary}
-        charges={charges}
-        balance={balance}
-      />
+      {/* 🤖 IA */}
+      <AdvisorAI salary={salary} charges={charges} balance={balance} />
+      <AdvisorChat salary={salary} charges={charges} balance={balance} />
 
-      {/* 🤖 IA chat */}
-      <AdvisorChat
-        salary={salary}
-        charges={charges}
-        balance={balance}
-      />
-
-      {/* 💾 Bouton sticky */}
+      {/* 💾 Sauvegarde */}
       <div className="sticky bottom-4 z-10 mt-6">
         <button
           onClick={() => {
@@ -167,10 +158,8 @@ export default function DashboardPage() {
       {/* 📆 Historique */}
       <HistoryList history={history} />
 
-      {/* 📈 Évolution (sécurisée) */}
-      {history.length > 0 && (
-        <HistoryChart history={history} />
-      )}
+      {/* 📈 Évolution */}
+      {history.length > 0 && <HistoryChart history={history} />}
 
     </main>
   );
