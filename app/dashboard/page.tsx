@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
+
 import { useTheme } from "../context/ThemeContext";
 
 import InfoCard from "../components/InfoCard";
@@ -14,13 +14,7 @@ import AdvisorChat from "../components/AdvisorChat";
 import HistoryList from "../components/HistoryList";
 
 // ✅ FIX VERCEL — dynamic import correct
-const HistoryChart = dynamic(
-  () =>
-    import("../components/HistoryChart").then(
-      (mod) => mod.default
-    ),
-  { ssr: false }
-);
+
 
 type HistoryItem = {
   month: string;
@@ -159,7 +153,7 @@ export default function DashboardPage() {
       <HistoryList history={history} />
 
       {/* 📈 Évolution */}
-      {history.length > 0 && <HistoryChart history={history} />}
+     
 
     </main>
   );
